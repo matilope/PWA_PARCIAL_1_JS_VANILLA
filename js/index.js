@@ -4,7 +4,7 @@ const form = document.querySelector("form");
 let mainSelector = document.querySelector("main");
 let historial;
 
-Date.prototype.obtenerFecha = function () {
+Date.prototype.fecha = function () {
     let months = [
         "Enero",
         "Febrero",
@@ -17,29 +17,43 @@ Date.prototype.obtenerFecha = function () {
         "Septiembre",
         "Octubre",
         "Noviembre",
-        "Diciembre",
+        "Diciembre"
     ];
-    return `${this.getDate()} de ${months[this.getMonth()]} a las ${this.getHours() <= 9 ? '0' + this.getHours() : this.getHours()}:${this.getMinutes() <= 9 ? ('0' + this.getMinutes()) : (this.getMinutes())}hs`;
+    return `${this.getDate()} de ${months[this.getMonth()]}`;
 };
 
 function localStorageData() {
-    const busquedasStorage = localStorage.getItem("busquedas_realizadas");
-    if (!busquedasStorage) {
+    const busquedasStorage = JSON.parse(localStorage.getItem("busquedas_realizadas"));
+    if (!busquedasStorage || !busquedasStorage.length) {
         localStorage.setItem("busquedas_realizadas", JSON.stringify([]));
+        return [];
     }
-    return JSON.parse(busquedasStorage);
+    creacionGrafico(busquedasStorage[0]);
+    return busquedasStorage;
 }
 
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const value = document.querySelector("input").value;
     try {
-        const { main, name, wind, weather, coord } = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${value}&units=metric&appid=${APIKEY}`)).json();
-        unshiftData(main, name, wind, weather);
+        const data = await (await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${value}&units=metric&appid=${APIKEY}`)).json();
+
+        /* Fixed de la data */
+        data.main.temp = data.main.temp.toFixed(1);
+        data.main.temp_min = data.main.temp_min.toFixed(1);
+        data.main.temp_max = data.main.temp_max.toFixed(1);
+        data.main.feels_like = data.main.feels_like.toFixed(1);
+        data.wind.speed = (data.wind.speed * 3.6).toFixed(0);
+
+        /* Funciones */
+        unshiftData(data);
         historialBusqueda();
-        creacionGrafico(main, name, wind, weather);
-        busquedaRealizada(coord);
-        e.target.children[0].children[0].value = "";
+        creacionGrafico(data);
+        busquedaRealizada(data.name, data.coord);
+
+        /* Vacio el input y remuevo el loader */
+        document.querySelector(".data-loader")?.remove();
+        e.target.children[0].children[1].value = "";
     }
     catch (error) {
         alertMessage();
@@ -47,26 +61,26 @@ form.addEventListener("submit", async (e) => {
     }
 });
 
-function unshiftData(main, name, wind, weather) {
+function unshiftData(data) {
     const busquedasStorage = localStorageData();
-    if (main && name && wind) {
-        const { temp, temp_max, temp_min, feels_like, humidity, pressure } = main;
-        const { icon } = weather[0];
-        const { speed } = wind;
-        busquedasStorage.unshift({ country: name, temp: temp.toFixed(1), temp_max: temp_max.toFixed(1), temp_min: temp_min.toFixed(1), icon, feels_like, humidity, pressure, wind: (speed * 1.609344).toFixed(1), date: new Date().obtenerFecha() });
+    if (data) {
+        data.date = new Date().fecha();
+        busquedasStorage.unshift(data);
         localStorage.setItem("busquedas_realizadas", JSON.stringify(busquedasStorage));
     }
 }
 
-function busquedaRealizada(coordenadas) {
+function busquedaRealizada(name, coordenadas) {
     let selectorMapa = document.querySelector(".map");
     selectorMapa?.remove();
     let section = document.createElement("section");
+    let h2 = document.createElement("h2");
     let map = document.createElement("div");
     mainSelector.insertBefore(section, historial);
-    section.appendChild(map);
+    section.append(h2, map);
     section.classList.add("map", "my-5");
     map.id = "map";
+    h2.textContent = `La ubicación en ${name}`;
     const mapInstance = tt.map({
         key: 'N4kGFtFTIrZG6KfCiubQTzkfPSgk84DP',
         container: 'map',
@@ -177,16 +191,19 @@ function historialBusqueda() {
     })
 }
 
-function creacionGrafico(main, name, wind, weather) {
+function creacionGrafico(data) {
+    const { main, weather, wind, name, date } = data;
     const { temp, temp_max, temp_min, feels_like, humidity, pressure } = main;
     const { icon } = weather[0];
     const { speed } = wind;
 
     document.querySelector(".container-alert")?.remove();
-    document.querySelector("#result")?.remove();
+    document.querySelector("#result")?.parentElement.remove();
 
-    let section = document.createElement("section");
     let h2 = document.createElement("h2");
+    let section = document.createElement("section");
+    let result = document.createElement("div");
+    let h3 = document.createElement("h3");
     let timeSpan = document.createElement("span");
     let container = document.createElement("div");
     let divFirst = document.createElement("div");
@@ -204,8 +221,8 @@ function creacionGrafico(main, name, wind, weather) {
     let hrSecond = document.createElement("hr");
     let hrThird = document.createElement("hr");
 
-    section.id = "result";
-    section.style = `background-color: ${icon[2] === "d" ? '#0081A7' : '#052934;'}`;
+    result.id = "result";
+    result.style = `background-color: ${icon[2] === "d" ? '#0081A7;' : '#052934;'}`;
     timeSpan.classList.add("time");
     container.classList.add("search-container");
     divFirst.classList.add("icon-temps-container");
@@ -214,17 +231,19 @@ function creacionGrafico(main, name, wind, weather) {
     extraInfo.classList.add("extra-info");
 
     mainSelector.insertBefore(section, historial);
-    section.append(h2, timeSpan, container);
+    section.append(h2, result);
+    result.append(h3, timeSpan, container);
     container.append(divFirst, extraInfo);
     divFirst.append(img, divSecond);
     divSecond.append(temperatureSpan, minMax);
     extraInfo.append(feelsLikeSpan, hrFirst, humiditySpan, hrSecond, pressureSpan, hrThird, windSpan);
 
+    h2.textContent = `El clima en ${name}`;
     img.src = `https://openweathermap.org/img/wn/${icon}@4x.png`;
-    h2.textContent = name;
-    timeSpan.textContent = `${new Date().obtenerFecha().split("las ")[1]}`;
-    temperatureSpan.textContent = `${temp.toFixed(1)}°C`;
-    minMax.textContent = `${temp_min.toFixed(1)}°C / ${temp_max.toFixed(1)}°C`;
+    h3.textContent = name;
+    timeSpan.textContent = date;
+    temperatureSpan.textContent = `${temp}°C`;
+    minMax.textContent = `${temp_min}°C / ${temp_max}°C`;
     feelsLikeSpan.textContent = `Sensación térmica ${feels_like}°C`;
     humiditySpan.textContent = `Humedad ${humidity}%`;
     pressureSpan.textContent = `Presión atmosférica ${pressure} hPa`;
@@ -246,10 +265,10 @@ function resultados(resultado) {
         trBody.append(thDate, tdPais, tdTemperatura, tdHumedad, tdViento);
 
         thDate.textContent = resultado[i].date;
-        tdPais.textContent = resultado[i].country;
-        tdTemperatura.textContent = `${resultado[i].temp}°C`;
-        tdHumedad.textContent = `${resultado[i].humidity}%`;
-        tdViento.textContent = `${resultado[i].wind}km/h`;
+        tdPais.textContent = resultado[i].name;
+        tdTemperatura.textContent = `${resultado[i].main.temp}°C`;
+        tdHumedad.textContent = `${resultado[i].main.humidity}%`;
+        tdViento.textContent = `${resultado[i].wind.speed}km/h`;
     }
 }
 
@@ -261,7 +280,7 @@ function alertMessage() {
         div.classList.add("container-alert");
         alert.classList.add("alert", "alert-danger");
         alert.setAttribute("role", "alert");
-        alert.textContent = "No se ha encontrado el país, provincia o ciudad que ha solicitado";
+        alert.textContent = "No se ha encontrado lo solicitado";
         div.appendChild(alert);
         document.querySelector(".buscador").appendChild(div);
     }
@@ -271,6 +290,7 @@ function alertMessage() {
 function noDataLoading() {
     if (!localStorageData().length) {
         let section = document.createElement("section");
+        section.classList.add("data-loader");
         mainSelector.appendChild(section);
         section.innerHTML = `
         <h2 class="titles-no-results">El tiempo en...</h2>

@@ -1,5 +1,5 @@
 /* Paleta de colores
-   https://coolors.co/palette/0081a7-00afb9-fdfcdc-fed9b7-f07167
+   https://coolors.co/052934-0081a7-fdfcdc-fed9b7-f07167
 */
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap');
@@ -16,6 +16,17 @@ html {
 
 body {
     font-family: 'Montserrat', sans-serif;
+    background: #FDFCDC;
+}
+
+h1 {
+    margin-bottom: 0;
+}
+
+h2:not(.banner h2) {
+    margin: 2rem 0;
+    color: #282828;
+    font-weight: 700;
 }
 
 nav:not(.nav) {
@@ -46,7 +57,7 @@ hr {
 /* BANNER */
 
 .banner {
-    background: linear-gradient(to bottom,#FDFCDC,#FED9B7);
+    background: linear-gradient(to bottom, #FDFCDC, #FED9B7);
     width: 100%;
     display: flex;
     justify-content: center;
@@ -64,6 +75,10 @@ hr {
     gap: 2rem;
 }
 
+.input-group {
+    width: 500px;
+}
+
 .input-group-prepend {
     display: flex;
     align-items: stretch;
@@ -71,6 +86,12 @@ hr {
 
 .input-group-text {
     border-radius: 1rem 0 0 1rem;
+}
+
+@media screen and (max-width:575px) {
+    .input-group {
+        width: 100%;
+    }
 }
 
 
@@ -82,7 +103,7 @@ hr {
     color: white;
 }
 
-#result h2 {
+#result h3 {
     font-size: 1.5rem;
 }
 
@@ -173,9 +194,33 @@ hr {
 }
 
 .page-link {
-    padding: 1rem 1.5rem;
+    background-color: #f07167;
+    color: white;
+    border: 1px solid #FED9B7;
+    padding: 0.75rem 1.25rem;
+    font-weight: bold;
 }
 
+.page-link:hover {
+    background-color: #b1443c;
+    color: white;
+    border: 1px solid #c9a380;
+    padding: 0.75rem 1.25rem;
+}
+
+table {
+    background-color: #FED9B7;
+}
+
+th, td {
+    padding: 1rem !important;
+}
+
+@media screen and (max-width:575px) {
+    th, td {
+        padding: 0.5rem !important;
+    }
+}
 
 /* Mapa */
 
@@ -215,7 +260,7 @@ footer {
 
 footer a {
     text-decoration: none;
-    color: rgba(33, 37, 41, 0.75);
+    color: #f07167;
 }
 
 footer ul {
