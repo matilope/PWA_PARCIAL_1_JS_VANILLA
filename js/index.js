@@ -290,24 +290,40 @@ function alertMessage() {
 function noDataLoading() {
     if (!localStorageData().length) {
         let section = document.createElement("section");
-        section.classList.add("data-loader");
+        let h2 = document.createElement("h2");
+        let span = document.createElement("span");
+        let result = document.createElement("div");
+        let divFirst = document.createElement("div");
+        let spanFirst = document.createElement("span");
+        let divSecond = document.createElement("div");
+        let spanSecond = document.createElement("div");
+        let divSecondInner = document.createElement("div");
+        let divInsideInnerFirst = document.createElement("div");
+        let divInsideInnerSecond = document.createElement("div");
+
         mainSelector.appendChild(section);
-        section.innerHTML = `
-        <h2 class="titles-no-results">El tiempo en...</h2>
-        <span class="d-block mb-3 lead">Todavía no se han realizado búsquedas en la página</span>
-        <div id="result" class="placerholder-customize">
-                <h3 class="placeholder-glow">
-                <span class="placeholder col-3"></span>
-                </h3>
-            <div class="placeholder-glow">
-                <span class="placeholder col-3"></span>
-                <div class="d-flex gap-3">
-                    <div class="my-3 placeholder col-6" style="height: 200px;"></div>
-                    <div class="my-3 placeholder col-6" style="height: 200px;"></div>
-                </div>
-            </div>
-        </div>
-        `;
+        section.append(h2, span, result);
+        result.append(divFirst, divSecond);
+        divFirst.append(spanFirst);
+        divSecond.append(spanSecond, divSecondInner);
+        divSecondInner.append(divInsideInnerFirst, divInsideInnerSecond);
+
+        section.classList.add("data-loader");
+        h2.classList.add("titles-no-results");
+        span.classList.add("d-block", "mb-3", "lead");
+        result.id = "result";
+        result.classList.add("placerholder-customize");
+        divFirst.classList.add("placeholder-glow");
+        spanFirst.classList.add("placeholder", "col-3");
+        divSecond.classList.add("placeholder-glow");
+        spanSecond.classList.add("placeholder", "col-3");
+        divSecondInner.classList.add("d-flex", "gap-3");
+        divInsideInnerFirst.classList.add("my-3", "placeholder", "col-6");
+        divInsideInnerSecond.classList.add("my-3", "placeholder", "col-6");
+        [divInsideInnerFirst, divInsideInnerSecond].forEach(div => div.style = "height: 200px");
+
+        h2.textContent = "El tiempo en...";
+        span.textContent = "Todavía no se han realizado búsquedas en la página";
     }
 }
 
